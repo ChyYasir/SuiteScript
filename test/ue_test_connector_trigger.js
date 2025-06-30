@@ -28,12 +28,43 @@ define(["N/log", "N/record"], /**
         context.type,
     });
 
-    // Optional: If you only want beforeLoad logs for Sales Orders:
+    // Only proceed with specific field logging if it's a Sales Order
     if (context.newRecord.type === record.Type.SALES_ORDER) {
+      try {
+        var newSalesOrder = context.newRecord;
+
+        // Get values of the fields as they are loaded
+        var giftCardValueOnLoad = newSalesOrder.getValue({
+          fieldId: "custbody_shopify_gift_card_new",
+        });
+        var althandlingcostOnLoad = newSalesOrder.getValue({
+          fieldId: "althandlingcost",
+        });
+
+        log.debug({
+          title: "UE: beforeLoad - Sales Order Field Values on Load",
+          details:
+            "Sales Order ID: " +
+            newSalesOrder.id +
+            "\nMode: " +
+            context.type +
+            "\nCust Gift Card (custbody_shopify_gift_card_new) on Load: " +
+            giftCardValueOnLoad +
+            "\nHandling Cost (althandlingcost) on Load: " +
+            althandlingcostOnLoad,
+        });
+      } catch (e) {
+        log.error({
+          title: "UE: beforeLoad - Script Error Logging Values",
+          details: e.message,
+        });
+      }
+    } else {
       log.debug({
-        title: "UE: beforeLoad - Sales Order Loaded",
+        title: "UE: beforeLoad - Not a Sales Order",
         details:
-          "Sales Order ID: " + context.newRecord.id + ", Mode: " + context.type,
+          "Script will not log specific values for non-Sales Order record type: " +
+          context.newRecord.type,
       });
     }
   }
