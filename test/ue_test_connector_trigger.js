@@ -48,9 +48,9 @@ define(["N/log", "N/record"], /**
             newSalesOrder.id +
             "\nMode: " +
             context.type +
-            "\nCust Gift Card (custbody_shopify_gift_card_new) on Load: " +
+            "\nShopify Gift Card Amount 2 (custbody_shopify_gift_card_new) on Load: " +
             giftCardValueOnLoad +
-            "\nHandling Cost (althandlingcost) on Load: " +
+            "\nGift Card Redemption (althandlingcost) on Load: " +
             althandlingcostOnLoad,
         });
       } catch (e) {
@@ -116,7 +116,7 @@ define(["N/log", "N/record"], /**
         });
 
         log.debug({
-          title: "UE: beforeSubmit - Gift Card Value Retrieved",
+          title: "UE: beforeSubmit - Shopify Gift Card Amount 2 Retrieved",
           details:
             "Value from custbody_shopify_gift_card_new: " + giftCardValue,
         });
@@ -133,12 +133,12 @@ define(["N/log", "N/record"], /**
           });
 
           log.debug({
-            title: "UE: beforeSubmit - Value Assigned to althandlingcost",
+            title: "UE: beforeSubmit - Value Assigned to Gift Card Redemption",
             details: "althandlingcost set to: " + parseFloat(giftCardValue),
           });
         } else {
           log.debug({
-            title: "UE: beforeSubmit - No Gift Card Value to Assign",
+            title: "UE: beforeSubmit - No Gift Card Redemption to Assign",
             details: "custbody_shopify_gift_card_new was empty or null.",
           });
         }
