@@ -10,15 +10,8 @@ define(["N/log", "N/record"], /**
   /**
    * Function to be executed before a record is loaded.
    * This runs when a user opens a record in the UI, or when the record is loaded programmatically.
-   * Use this for setting initial values, or showing alerts on load.
-   *
-   * @param {Object} context
-   * @param {Record} context.newRecord - The record object currently being loaded.
-   * @param {string} context.type - The type of event (CREATE, VIEW, EDIT, COPY).
    */
   function beforeLoad(context) {
-    // This will log every time any record is loaded in the UI or programmatically by a script
-    // that triggers beforeLoad (like a connector if it does a full record load before processing).
     log.debug({
       title: "UE: beforeLoad Triggered",
       details:
@@ -28,24 +21,27 @@ define(["N/log", "N/record"], /**
         context.type,
     });
 
-    // Only proceed with specific field logging if it's a Sales Order
-    if (context.newRecord.type === record.Type.SALES_ORDER) {
-      try {
-        var newSalesOrder = context.newRecord;
+    // Check if the record is a Sales Order OR a Cash Sale
+    var isRelevantRecordType =
+      context.newRecord.type === record.Type.SALES_ORDER ||
+      context.newRecord.type === record.Type.CASH_SALE;
 
-        // Get values of the fields as they are loaded
-        var giftCardValueOnLoad = newSalesOrder.getValue({
+    if (isRelevantRecordType) {
+      try {
+        var currentRecord = context.newRecord;
+
+        var giftCardValueOnLoad = currentRecord.getValue({
           fieldId: "custbody_shopify_gift_card_new",
         });
-        var althandlingcostOnLoad = newSalesOrder.getValue({
+        var althandlingcostOnLoad = currentRecord.getValue({
           fieldId: "althandlingcost",
         });
 
         log.debug({
-          title: "UE: beforeLoad - Sales Order Field Values on Load",
+          title: "UE: beforeLoad - Relevant Record Field Values on Load",
           details:
-            "Sales Order ID: " +
-            newSalesOrder.id +
+            "Record ID: " +
+            currentRecord.id +
             "\nMode: " +
             context.type +
             "\nShopify Gift Card Amount 2 (custbody_shopify_gift_card_new) on Load: " +
@@ -61,9 +57,9 @@ define(["N/log", "N/record"], /**
       }
     } else {
       log.debug({
-        title: "UE: beforeLoad - Not a Sales Order",
+        title: "UE: beforeLoad - Not a Sales Order or Cash Sale",
         details:
-          "Script will not log specific values for non-Sales Order record type: " +
+          "Script will not log specific values for record type: " +
           context.newRecord.type,
       });
     }
@@ -72,15 +68,8 @@ define(["N/log", "N/record"], /**
   /**
    * The `beforeSubmit` entry point for User Event scripts.
    * This function executes before a record is submitted to the database.
-   * It allows you to inspect and modify the record before it's saved.
-   *
-   * @param {Object} context
-   * @param {Record} context.newRecord - The new record object being submitted.
-   * @param {Record} context.oldRecord - The old record object (available on edit/xedit/delete).
-   * @param {string} context.type - The type of event (CREATE, EDIT, XEDIT, DELETE, etc.).
    */
   function beforeSubmit(context) {
-    // Log entry for beforeSubmit
     log.debug({
       title: "UE: beforeSubmit Triggered",
       details:
@@ -90,56 +79,62 @@ define(["N/log", "N/record"], /**
         context.type,
     });
 
-    // IMPORTANT: Only proceed with the field assignment logic if it's a Sales Order.
-    // We put this check *before* accessing specific SO fields.
-    if (context.newRecord.type !== record.Type.SALES_ORDER) {
+    // Check if the record is a Sales Order OR a Cash Sale
+    var isRelevantRecordType =
+      context.newRecord.type === record.Type.SALES_ORDER ||
+      context.newRecord.type === record.Type.CASH_SALE;
+
+    if (!isRelevantRecordType) {
       log.debug({
-        title: "UE: beforeSubmit - Not a Sales Order",
+        title: "UE: beforeSubmit - Not a Sales Order or Cash Sale",
         details:
-          "Script will not process non-Sales Order record type: " +
-          context.newRecord.type,
+          "Script will not process record type: " + context.newRecord.type,
       });
-      return; // Exit the function if it's not a Sales Order
+      return;
     }
 
-    // Only apply assignment logic on CREATE, EDIT, XEDIT events for Sales Orders
+    // Only apply assignment logic on CREATE, EDIT, XEDIT events
     if (
       context.type === context.UserEventType.CREATE ||
       context.type === context.UserEventType.EDIT ||
       context.type === context.UserEventType.XEDIT
     ) {
       try {
-        var newSalesOrder = context.newRecord;
+        var newRecord = context.newRecord;
 
-        var giftCardValue = newSalesOrder.getValue({
+        var giftCardAmount2 = newRecord.getValue({
           fieldId: "custbody_shopify_gift_card_new",
         });
 
         log.debug({
           title: "UE: beforeSubmit - Shopify Gift Card Amount 2 Retrieved",
           details:
-            "Value from custbody_shopify_gift_card_new: " + giftCardValue,
+            "Value from Shopify Gift Card Amount 2 (custbody_shopify_gift_card_new): " +
+            giftCardAmount2,
         });
 
         if (
-          giftCardValue !== null &&
-          giftCardValue !== "" &&
-          giftCardValue !== undefined
+          giftCardAmount2 !== null &&
+          giftCardAmount2 !== "" &&
+          giftCardAmount2 !== undefined
         ) {
-          newSalesOrder.setValue({
+          newRecord.setValue({
             fieldId: "althandlingcost",
-            value: parseFloat(giftCardValue), // Ensure numeric
+            value: parseFloat(giftCardAmount2), // Ensure numeric
             ignoreFieldChange: true,
           });
 
           log.debug({
             title: "UE: beforeSubmit - Value Assigned to Gift Card Redemption",
-            details: "althandlingcost set to: " + parseFloat(giftCardValue),
+            details:
+              "Gift Card Redemption (althandlingcost) set to: " +
+              parseFloat(giftCardAmount2),
           });
         } else {
           log.debug({
             title: "UE: beforeSubmit - No Gift Card Redemption to Assign",
-            details: "custbody_shopify_gift_card_new was empty or null.",
+            details:
+              "Shopify Gift Card Amount 2 (custbody_shopify_gift_card_new) was empty or null.",
           });
         }
       } catch (e) {
@@ -159,15 +154,8 @@ define(["N/log", "N/record"], /**
 
   /**
    * The `afterSubmit` entry point for User Event scripts.
-   * This function executes after a record has been successfully saved to the database.
-   *
-   * @param {Object} context
-   * @param {Record} context.newRecord - The record object that was just submitted and saved.
-   * @param {Record} context.oldRecord - The old record object (available on edit/xedit/delete).
-   * @param {string} context.type - The type of event (CREATE, EDIT, XEDIT, DELETE, etc.).
    */
   function afterSubmit(context) {
-    // Log entry for afterSubmit
     log.debug({
       title: "UE: afterSubmit Triggered",
       details:
@@ -177,30 +165,32 @@ define(["N/log", "N/record"], /**
         context.type,
     });
 
-    // Only log values for Sales Orders
-    if (context.newRecord.type === record.Type.SALES_ORDER) {
-      try {
-        var newSalesOrder = context.newRecord; // The record that was just saved
+    // Check if the record is a Sales Order OR a Cash Sale
+    var isRelevantRecordType =
+      context.newRecord.type === record.Type.SALES_ORDER ||
+      context.newRecord.type === record.Type.CASH_SALE;
 
-        // Get the value of the custom field after save
-        var giftCardValueAfterSave = newSalesOrder.getValue({
+    if (isRelevantRecordType) {
+      try {
+        var newRecord = context.newRecord;
+
+        var giftCardAmount2AfterSave = newRecord.getValue({
           fieldId: "custbody_shopify_gift_card_new",
         });
 
-        // Get the value of the standard field after save
-        var althandlingcostAfterSave = newSalesOrder.getValue({
+        var giftCardRedemptionAfterInitialSave = newRecord.getValue({
           fieldId: "althandlingcost",
         });
 
         log.debug({
-          title: "UE: afterSubmit - Field Values After Save",
+          title: "UE: afterSubmit - Field Values After Initial Save",
           details:
-            "Sales Order ID: " +
-            newSalesOrder.id +
-            "\nShopify Gift Card Amount 2 (custbody_shopify_gift_card_new): " +
-            giftCardValueAfterSave +
-            "\nGift Card Redemption (althandlingcost): " +
-            althandlingcostAfterSave,
+            "Record ID: " +
+            newRecord.id +
+            "\nShopify Gift Card Amount 2 (custbody_shopify_gift_card_new) after initial save: " +
+            giftCardAmount2AfterSave +
+            "\nGift Card Redemption (althandlingcost) after initial save: " +
+            giftCardRedemptionAfterInitialSave,
         });
       } catch (e) {
         log.error({
@@ -210,15 +200,14 @@ define(["N/log", "N/record"], /**
       }
     } else {
       log.debug({
-        title: "UE: afterSubmit - Not a Sales Order",
+        title: "UE: afterSubmit - Not a Sales Order or Cash Sale",
         details:
-          "Script will not log values for non-Sales Order record type: " +
+          "Script will not process non-relevant record type: " +
           context.newRecord.type,
       });
     }
   }
 
-  // Return all entry point functions that NetSuite should execute.
   return {
     beforeLoad: beforeLoad,
     beforeSubmit: beforeSubmit,
