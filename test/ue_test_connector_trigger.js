@@ -33,8 +33,8 @@ define(["N/log", "N/record"], /**
         var giftCardValueOnLoad = currentRecord.getValue({
           fieldId: "custbody_shopify_gift_card_new",
         });
-        var handlingcostOnLoad = currentRecord.getValue({
-          fieldId: "handlingcost",
+        var althandlingcostOnLoad = currentRecord.getValue({
+          fieldId: "althandlingcost",
         });
 
         log.debug({
@@ -46,8 +46,8 @@ define(["N/log", "N/record"], /**
             context.type +
             "\nShopify Gift Card Amount 2 (custbody_shopify_gift_card_new) on Load: " +
             giftCardValueOnLoad +
-            "\nGift Card Redemption (handlingcost) on Load: " +
-            handlingcostOnLoad,
+            "\nGift Card Redemption (althandlingcost) on Load: " +
+            althandlingcostOnLoad,
         });
       } catch (e) {
         log.error({
@@ -119,7 +119,7 @@ define(["N/log", "N/record"], /**
           giftCardAmount2 !== undefined
         ) {
           newRecord.setValue({
-            fieldId: "handlingcost",
+            fieldId: "althandlingcost",
             value: parseFloat(giftCardAmount2), // Ensure numeric
             ignoreFieldChange: true,
           });
@@ -127,7 +127,7 @@ define(["N/log", "N/record"], /**
           log.debug({
             title: "UE: beforeSubmit - Value Assigned to Gift Card Redemption",
             details:
-              "Gift Card Redemption (handlingcost) set to: " +
+              "Gift Card Redemption (althandlingcost) set to: " +
               parseFloat(giftCardAmount2),
           });
         } else {
@@ -179,7 +179,7 @@ define(["N/log", "N/record"], /**
         });
 
         var giftCardRedemptionAfterInitialSave = newRecord.getValue({
-          fieldId: "handlingcost",
+          fieldId: "althandlingcost",
         });
 
         log.debug({
@@ -189,7 +189,7 @@ define(["N/log", "N/record"], /**
             newRecord.id +
             "\nShopify Gift Card Amount 2 (custbody_shopify_gift_card_new) after initial save: " +
             giftCardAmount2AfterSave +
-            "\nGift Card Redemption (handlingcost) after initial save: " +
+            "\nGift Card Redemption (althandlingcost) after initial save: " +
             giftCardRedemptionAfterInitialSave,
         });
       } catch (e) {
