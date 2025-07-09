@@ -14,12 +14,12 @@ shop = os.environ.get("SHOPIFY_SHOP_NAME")
 token = os.environ.get("SHOPIFY_ACCESS_TOKEN")
 
 # input file names
-csv1_path = '2024_SFCCOrdersHeaderExport.csv'#orders
-csv2_path = '2024_SFCCOrdersDetailExport.csv'#items
+csv1_path = '2025 May to July Seabags orders - SFCCOrdersHeaderExportforShopify-457.csv'#orders
+csv2_path = '2025 May to July Seabags orders - SFCCOrdersDetailExportforShopify-719.csv'#items
 # csv3_path = 'payments.csv'
 
 # output file name
-output_json_path = '2024_production_combined_orders.json'
+output_json_path = '2025_May_to_July_production_combined_orders.json'
 
 def run_and_track_bulk_operation(shop_name, access_token, interval=10, download_dir="./downloads", verify_ssl=True):
     # Step 1: Create the bulk operation

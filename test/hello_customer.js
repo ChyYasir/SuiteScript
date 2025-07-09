@@ -3,10 +3,10 @@
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  */
-define(["N/ui/dialog"], /**
+define(["N/ui/dialog"]
+/**
  * @param {Object} dialog
- */
-function (dialog) {
+ */, function (dialog) {
   /**
    * Function to be executed after page is initialized.
    *
@@ -25,7 +25,11 @@ function (dialog) {
         })
         .then(function (result) {
           // Optional: You can do something after the user clicks OK on the alert
-          console.log("User clicked OK on the alert.");
+          // console.log("User clicked OK on the alert.");
+          log.debug({
+            title: "Testing",
+            details: "Testing",
+          });
         })
         .catch(function (error) {
           // Optional: Handle any error if the dialog fails to show
